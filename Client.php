@@ -34,6 +34,42 @@ class Client
         if ($this->curl)
             curl_close($this->curl);
     }
+    
+    
+  public function get_mime_type($file) { 
+   $file=pathinfo($file);
+   $ext = $file['extension'];
+   // Расширение в нижний регистр 
+   $ext=trim(strtolower($ext)); 
+   switch($ext) {
+       case 'pdf' : $ctype = 'application/pdf'; break;
+       case 'zip' : $ctype = 'application/zip'; break;
+       case 'doc' : $ctype = 'application/msword'; break;
+       case 'xls' : $ctype = 'application/vnd.ms-excel'; break;
+       case 'gif' : $ctype = 'image/gif'; break;
+       case 'png' : $ctype = 'image/png'; break;
+       case 'jpeg':
+       case 'jpg' : $ctype = 'image/jpg'; break;
+       case 'mp3' : $ctype = 'audio/mpeg'; break;
+       case 'wav' : $ctype = 'audio/x-wav'; break;
+       case 'mpeg':
+       case 'mpg' :
+       case 'mpe' : $ctype = 'video/mpeg'; break;
+       case 'mov' : $ctype = 'video/quicktime'; break;
+       case 'avi' : $ctype = 'video/x-msvideo'; break;
+       default    : $ctype = 'application/octet-stream';
+    }
+    if ($ext!='' && isset($ctype)) { 
+        // Если есть такой MIME-тип, то вернуть его 
+        return $ctype; 
+    } 
+    else { 
+        // Иначе вернуть дефолтный MIME-тип 
+        return "application/force-download"; 
+    }     
+}
+    
+    
 
     /**
      * @param $file
@@ -46,6 +82,25 @@ class Client
             array(''),
             'GET'
         );
+    }
+    
+    /**
+     * @param $file
+     * @return File Download
+     */
+    public function get_file($file)
+    {
+      $mimetype = $this->get_mime_type($file);
+      $result = $this->request(
+            $this->config->hostname . $file,
+            array(''),
+            'GET'
+        );
+      if ($result) {
+      header('Content-Disposition: attachment; filename='.basename($file));
+      header('Content-Type: '.$mimetype);
+      echo $result->response;
+      }
     }
 
     /**
